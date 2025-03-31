@@ -1,5 +1,5 @@
 local toolCall = require("scripts.ToolCall.ToolCall")
-local structDefine = require("./StructDefine/StructDefine")
+local tool = require("scripts.ToolCall.SystemTool")
 
 local function handleMessage(mt, data)
     if mt == WebSocketMessageType.OPEN then
@@ -8,13 +8,8 @@ local function handleMessage(mt, data)
     elseif mt == WebSocketMessageType.TEXT then
       print("收到消息: " .. data)
 
-      local decodeObj, pos, error = json.decode(data)
-      if error then
-          print("JSON 反序列化失败: " .. error .. " msg:" .. data)
-          return
-      else
-          print("JSON 反序列化成功 ")
-      end
+      -- 解析消息
+      local decodeObj = DecodeJsonToObj(data)
 
       local messageDistruct = Create_MessageStruct(decodeObj)
       local result = HandleMessage(messageDistruct)

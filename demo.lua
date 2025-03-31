@@ -1,55 +1,78 @@
+-- 填充坐标所在区域颜色
+function FillAreaColor(image, x, y, color)
+  -- 获取当前像素的颜色
+  local currentColor = image:getPixel(x, y)
+  -- 如果当前像素已经是目标颜色，直接返回
+  if currentColor == color then
+    return
+  end
+  local i = 1;
 
--- 获取当前活动精灵
-local sprite = app.activeSprite
+  -- 递归填充函数
+  local function fill(x, y)
+    if i > 30 then
+      return;
+    end
 
--- 检查是否有活动精灵
-if not sprite then
-  app.alert("没有打开的精灵。")
-  return
+    -- 检查边界条件
+    if x < 0 or x >= app.sprite.width or y < 0 or y >= app.sprite.height then
+      return
+    end
+
+    print(image:getPixel(35, 29))
+    print(currentColor)
+    -- 如果当前像素不是要填充的颜色，直接返回
+    if image:getPixel(x, y) ~= currentColor then
+      return
+    end
+
+    -- 绘制像素
+    image:drawPixel(x, y, color)
+    print("填充像素：" .. x .. "," .. y)
+    i = i + 1;
+
+    -- 递归填充上下左右四个方向
+    fill(x + 1, y)
+    fill(x - 1, y)
+    fill(x, y + 1)
+    fill(x, y - 1)
+  end
+
+  -- 开始填充
+  fill(x, y)
 end
 
--- 获取当前活动帧
-local frame = app.frame
+-- FillAreaColor(app.image,31,31,app.pixelColor.rgba(255,0,0,255))
+local sprite = app.sprite
 
--- 检查是否有活动帧
-if not frame then
-  app.alert("当前精灵没有帧。")
-  return
-end
-
--- 获取当前活动图层
-local layer = app.layer
-
--- 检查是否有活动图层
+local layer = app.sprite.layers[1]
 if not layer then
-  app.alert("当前精灵没有图层。")
   return
 end
-
--- 获取当前活动图像
-local image = layer.cels[1].image
-
--- 检查是否有活动图像
-if not image then
-  app.alert("当前图层没有图像。")
-  return
+local cel = layer:cel(1)
+if not cel then
+  print("未找到指定帧:")
+  cel = app.sprite:newCel(layer,1,Image(64,64))
 end
+-- print(cel.position)
+-- print(cel.image.width..cel.image.height)
 
--- 定义要设置的像素坐标 (例如，x=10, y=20)
-local pixel_x = 10
-local pixel_y = 20
+-- cel.image:drawPixel(0,0,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(0,1,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(0,2,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(1,0,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(1,2,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(2,0,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(2,1,app.pixelColor.rgba(255,0,0,255))
+-- cel.image:drawPixel(2,2,app.pixelColor.rgba(255,0,0,255))
+-- print(cel.image.width..cel.image.height)
+print(cel.image.width..cel.image.height)
+local newImage = Image(64,64)
+local point = Point(0,0)
+newImage:drawImage(cel.image,point)
+cel.image = newImage
+print(cel.image.width..cel.image.height)
+cel.image:drawPixel(10,10,app.pixelColor.rgba(255,0,0,255))
 
--- 定义要设置的颜色 (RGBA 格式，范围 0-255)
-local red = 255   -- 红色
-local green = 0     -- 绿色
-local blue = 0      -- 蓝色
-local alpha = 255   -- 透明度 (255 为完全不透明)
-
--- 创建颜色对象
-local color = Color(red, green, blue, alpha)
-
--- 设置像素颜色
-image:putPixel(pixel_x, pixel_y, color)
-
--- 可选: 更新精灵的显示 (如果需要立即看到效果)
 app.refresh()
+

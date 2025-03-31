@@ -9,7 +9,7 @@ export class AsepriteClient {
   client: WebSocket | undefined;
 
   //已经完成的请求
-  completedRequests: Map<number, boolean> = new Map();
+  completedRequests: Map<number, {succ:boolean,reason:string}> = new Map();
 
   singleRequestWaitCount: number = 50;
 
@@ -23,17 +23,21 @@ export class AsepriteClient {
     this.client?.send(JSON.stringify(msg));
   }
 
-  async getCallBack(sessionId: number):Promise<boolean | undefined> {
+  async getCallBack(sessionId: number):Promise<{succ:boolean,reason:string}> {
     const waitTime = this.singleRequestWaitCount;
     while (waitTime > 0) {
         if(this.completedRequests.has(sessionId)){
-            const succ = this.completedRequests.get(sessionId);
+            const result = this.completedRequests.get(sessionId);
+            if(!result)
+                break;
+            const succ = result.succ;
+            const reason = result.reason;
             this.completedRequests.delete(sessionId);
-            return succ;
+            return {succ,reason};
         }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    return false;
+    return {succ:false,reason:"未及时收到Aseprite回执结果"};
   }
 
   connect() {
@@ -51,10 +55,10 @@ export class AsepriteClient {
       console.log("收到消息:", message);
       if(message != null && message.length > 0){
         const strs = message.split(";;");
-        if(strs.length == 2){
+        if(strs.length == 3){
             const sessionId = parseInt(strs[0]);
             if(sessionId > 0){
-                this.completedRequests.set(sessionId, strs[1] == "1");
+                this.completedRequests.set(sessionId, {succ:(strs[1] == "1"),reason:strs[2]});
             }
         }
       }

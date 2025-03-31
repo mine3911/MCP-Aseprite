@@ -30,7 +30,8 @@ export const createSpriteTools = (
             content: [
                 {
                     type: "text",
-                    text: result ? "Task Success" : "Task Failed",
+                    text: result.succ ? "Task Success" : "Task Failed,Reason:" + result.reason,
+
                 },
             ],
         };
