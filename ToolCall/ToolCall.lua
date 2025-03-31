@@ -39,6 +39,9 @@ function Call_CreateSprite(jsonBody)
         height = tonumber(height)
         if type(width) == "number" and type(height) == "number" then
             app.activeSprite = Sprite(width, height)
+            -- 获取或创建调色板
+            local palette = Palette({fromResource="DB32"})
+            app.activeSprite:setPalette(palette) -- 设置为当前帧的调色板 (索引 1)
         else
             print("无效的尺寸参数: " .. width .. "x" .. height)
         end
