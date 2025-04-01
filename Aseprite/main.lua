@@ -3,21 +3,21 @@ local tool = require("scripts.ToolCall.SystemTool")
 
 local function handleMessage(mt, data)
     if mt == WebSocketMessageType.OPEN then
-      print("Connection open. Sending a message...")
+        print("Connection open. Sending a message...")
   
     elseif mt == WebSocketMessageType.TEXT then
-      print("收到消息: " .. data)
+        print("Received message: " .. data)
 
-      -- 解析消息
-      local decodeObj = DecodeJsonToObj(data)
+        -- Parse message
+        local decodeObj = DecodeJsonToObj(data)
 
-      local messageDistruct = Create_MessageStruct(decodeObj)
-      local result = HandleMessage(messageDistruct)
+        local messageDistruct = Create_MessageStruct(decodeObj)
+        local result = HandleMessage(messageDistruct)
 
-      Ws:sendText(messageDistruct.sessionID .. ";;" .. ((result.processSucc and "1") or "0")..";;"..result.reason)
+        Ws:sendText(messageDistruct.sessionID .. ";;" .. ((result.processSucc and "1") or "0") .. ";;" .. result.reason)
 
     elseif mt == WebSocketMessageType.CLOSE then
-      print("Connection closed")
+        print("Connection closed")
     end
 end
 
@@ -27,12 +27,12 @@ Ws = WebSocket{
     deflate = false
 }
 
--- 手动触发连接（或自动连接）
+-- Manually trigger connection (or auto-connect)
 Ws:connect()
 
-local dlg = Dialog { title = "MCP-Aseprite",onclose=OnDlgClose }
+local dlg = Dialog { title = "MCP-Aseprite", onclose = OnDlgClose }
 function OnDlgClose()
     Ws:close()
 end
 
-dlg:show {wait=false}
+dlg:show { wait = false }

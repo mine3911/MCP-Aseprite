@@ -9,7 +9,7 @@ function HandleMessage(messageDistruct)
     local command = messageDistruct.command
     local bodyJsonStr = messageDistruct.body
 
-    print("解析为指令：" .. command .. "，参数：" .. bodyJsonStr)
+    print("Parsed command: " .. command .. ", parameters: " .. bodyJsonStr)
 
     local info = {
         processSucc = true,
@@ -18,11 +18,11 @@ function HandleMessage(messageDistruct)
 
     if command == "create-sprite" then
         Call_CreateSprite(bodyJsonStr, info)
-    elseif command == "draw-pixel"  then
+    elseif command == "draw-pixel" then
         Call_DrawPixel(bodyJsonStr, info)
     else
         info.processSucc = false
-        info.reason = "未知指令:" .. command .. " Aseprite 插件不支持该指令"
+        info.reason = "Unknown command: " .. command .. ". Aseprite plugin does not support this command"
     end
 
     return info
@@ -30,21 +30,21 @@ end
 
 --========================================================
 
---绘制像素
+-- Draw pixel
 function Call_DrawPixel(jsonBody, info)
     info.processSucc = true
 
     local decodeObj = DecodeJsonToObj(jsonBody)
     if (decodeObj == nil) or (#decodeObj <= 0) then
         info.processSucc = false
-        info.reason = "参数解析反序列化失败"
+        info.reason = "Parameter parsing deserialization failed"
         return
     end
 
     local sprite = app.sprite
     if not sprite then
         info.processSucc = false
-        info.reason = "未找到当前Sprite,需要新建Sprite"
+        info.reason = "Current Sprite not found, need to create a new Sprite"
         return
     end
     local width = sprite.width
@@ -63,29 +63,30 @@ function Call_DrawPixel(jsonBody, info)
 
         CheckLayerAndFrame(sprite, targetLayer, targetFrame, createFrameMode)
 
-        -- 创建一个数组来保存分割后的坐标
+        -- Create an array to save the split coordinates
         local posArray = {}
 
-        -- 分割 posStr 以 ';' 字符
+        -- Split posStr by ';' character
         for coordStr in string.gmatch(posStr, "([^;]+)") do
-            -- 解析每个坐标字符串为 x 和 y
+            -- Parse each coordinate string into x and y
             local posX, posY = coordStr:match("(%d+),(%d+)")
             if posX and posY then
                 posX = tonumber(posX)
                 posY = tonumber(posY)
 
-                -- 验证坐标范围
+                -- Validate coordinate range
                 if posX < 0 or posX >= width or posY < 0 or posY >= height then
                     info.processSucc = false
-                    info.reason = "绘制位置超出Sprite尺寸,Sprite 尺寸:" .. width .. "x" .. height .. " 坐标:" .. coordStr
+                    info.reason = "Drawing position exceeds Sprite dimensions, Sprite size: " ..
+                    width .. "x" .. height .. " Coordinate: " .. coordStr
                     return
                 end
 
-                -- 将有效的坐标添加到数组中
+                -- Add valid coordinates to the array
                 table.insert(posArray, { x = posX, y = posY })
             else
                 info.processSucc = false
-                info.reason = "坐标格式错误:" .. coordStr
+                info.reason = "Coordinate format error: " .. coordStr
                 return
             end
         end
@@ -93,7 +94,8 @@ function Call_DrawPixel(jsonBody, info)
         local layer = sprite.layers[targetLayer]
         if not layer then
             info.processSucc = false
-            info.reason = "未找到指定Layer:" .. targetLayer .. ",layers目前数量：" .. #sprite.layers
+            info.reason = "Specified Layer not found: " ..
+            targetLayer .. ", current number of layers: " .. #sprite.layers
             return
         end
 
@@ -103,28 +105,28 @@ function Call_DrawPixel(jsonBody, info)
         end
         if not cel then
             info.processSucc = false
-            info.reason = "未找到指定帧:" .. targetFrame
+            info.reason = "Specified frame not found: " .. targetFrame
             return
         end
 
         local image = cel.image
         if not image then
             info.processSucc = false
-            info.reason = "未找到Layer:" .. targetLayer .. ",frame:" .. targetFrame .. "下的Image信息"
+            info.reason = "Image information not found under Layer: " .. targetLayer .. ", frame: " .. targetFrame
             return
         end
 
         local targetColor = app.pixelColor.rgba(color_r, color_g, color_b, color_a)
 
         if drawType == 1 then
-            -- 单点绘制
+            -- Single point drawing
             for _, pos in ipairs(posArray) do
                 local posX = pos.x
                 local posY = pos.y
                 DrawPixel(image, posX, posY, targetColor)
             end
         elseif drawType == 2 then
-            -- 连线绘制
+            -- Line drawing
             for i = 1, #posArray - 1 do
                 local posX1 = posArray[i].x
                 local posY1 = posArray[i].y
@@ -133,7 +135,7 @@ function Call_DrawPixel(jsonBody, info)
                 DrawLine(image, posX1, posY1, posX2, posY2, targetColor)
             end
         elseif drawType == 3 then
-            -- 填充模式
+            -- Fill mode
             for _, pos in ipairs(posArray) do
                 local posX = pos.x
                 local posY = pos.y
@@ -141,7 +143,7 @@ function Call_DrawPixel(jsonBody, info)
             end
         else
             info.processSucc = false
-            info.reason = "未知绘制模式:" .. drawType
+            info.reason = "Unknown drawing mode: " .. drawType
             return
         end
     end
@@ -149,35 +151,35 @@ function Call_DrawPixel(jsonBody, info)
     app.refresh()
 end
 
---创建Sprite
+-- Create Sprite
 function Call_CreateSprite(jsonBody, info)
     info.processSucc = true
 
     local decodeObj = DecodeJsonToObj(jsonBody)
     if (decodeObj == nil) then
         info.processSucc = false
-        info.reason = "参数解析反序列化失败"
+        info.reason = "Parameter parsing deserialization failed"
         return
     end
 
     local width = decodeObj.width
     local height = decodeObj.height
 
-    -- 输入验证：确保宽度和高度有效
+    -- Input validation: ensure width and height are valid
     if width and height then
         width = tonumber(width)
         height = tonumber(height)
         if type(width) == "number" and type(height) == "number" then
             app.activeSprite = Sprite(width, height)
-            -- 获取或创建调色板
+            -- Get or create palette
             local palette = Palette({ fromResource = "DB32" })
-            app.activeSprite:setPalette(palette) -- 设置为当前帧的调色板 (索引 1)
+            app.activeSprite:setPalette(palette) -- Set as the palette for the current frame (index 1)
         else
             info.processSucc = false
-            info.reason = "无效的尺寸参数" .. width .. "x" .. height
+            info.reason = "Invalid dimension parameters: " .. width .. "x" .. height
         end
     else
         info.processSucc = false
-        info.reason = "尺寸格式错误" .. width .. "x" .. height
+        info.reason = "Dimension format error: " .. width .. "x" .. height
     end
 end

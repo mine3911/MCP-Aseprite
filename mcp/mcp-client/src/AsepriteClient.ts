@@ -8,7 +8,7 @@ export class AsepriteClient {
   url: string = "ws://localhost:8848";
   client: WebSocket | undefined;
 
-  //已经完成的请求
+  // Completed requests
   completedRequests: Map<number, { succ: boolean; reason: string }> = new Map();
 
   singleRequestWaitCount: number = 50;
@@ -39,7 +39,7 @@ export class AsepriteClient {
       }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    return { succ: false, reason: "未及时收到Aseprite回执结果" };
+    return { succ: false, reason: "Did not receive Aseprite response in time" };
   }
 
   async checkConnection() {
@@ -57,20 +57,20 @@ export class AsepriteClient {
   }
 
   connect() {
-    // 创建 WebSocket 客户端实例
+    // Create WebSocket client instance
     this.client = new WebSocket("ws://localhost:8848");
 
-    // 连接成功后的回调
+    // Callback when connection is open
     this.client.addEventListener("open", () => {
       this.connected = true;
     });
 
-    // 接收到消息的回调
+    // Callback when a message is received
     this.client.addEventListener("message", (event: MessageEvent<string>) => {
-      const message = event.data; // 使用 event.data 获取消息内容
+      const message = event.data; // Use event.data to get message content
 
       if (message != null && message.length > 0) {
-        //   console.log("收到消息:", message);
+        //   console.log("Received message:", message);
         const strs = message.split(";;");
         if (strs.length >= 2) {
           const sessionId = parseInt(strs[0]);
@@ -84,14 +84,14 @@ export class AsepriteClient {
       }
     });
 
-    // 连接关闭的回调
+    // Callback when connection is closed
     this.client.addEventListener("close", (event: CloseEvent) => {
-      console.log("连接已关闭，代码:", event.code, ", 原因:", event.reason);
+      console.log("Connection closed, code:", event.code, ", reason:", event.reason);
     });
 
-    // 连接错误的回调
+    // Callback when there is a connection error
     this.client.addEventListener("error", (error: Event) => {
-      console.error("连接错误:", error);
+      console.error("Connection error:", error);
     });
   }
 }

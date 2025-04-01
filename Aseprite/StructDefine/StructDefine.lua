@@ -18,12 +18,12 @@ Struct_CreateSprite = {
 }
 
 Struct_DrawPixel = {
-    -- 绘制像素模式，1：单点绘制（传入一个点的坐标），2：连线绘制（传入两点坐标，确定一条直线，然后绘制线条），3：填充模式（传入一个点的坐标，然后填充该点所在的区域）
+    -- Drawing pixel mode, 1: single point drawing (pass in one point's coordinates), 2: line drawing (pass in two points' coordinates to determine a straight line, then draw the line), 3: fill mode (pass in one point's coordinates, then fill the area where the point is located)
     drawType = 1,
     targetLayer = 1,
     targetFrame = 1,
-    createFrameMode = 1,    --创建frame时的模式，1：创建一个空的frame，2：创建一个与上一个frame相同尺寸的frame，并复制上一个frame的图像数据
-    posStr = "", -- 格式："x1,y1;x2,y2"
+    createFrameMode = 1,    -- Mode when creating a frame, 1: create an empty frame, 2: create a frame with the same size as the previous frame and copy the image data from the previous frame
+    posStr = "", -- Format: "x1,y1;x2,y2"
     color_r = 0,
     color_g = 0,
     color_b = 0,
