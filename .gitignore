@@ -1,4 +1,4 @@
-mcp-client/node_modules
-mcp-client/tsconfig.json
+mcp/mcp-client/node_modules
+mcp/mcp-client/tsconfig.json
 .vscode
-demo.lua
+Aseprite/demo.lua
