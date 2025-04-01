@@ -67,12 +67,17 @@ end
 -- cel.image:drawPixel(2,2,app.pixelColor.rgba(255,0,0,255))
 -- print(cel.image.width..cel.image.height)
 print(cel.image.width..cel.image.height)
-local newImage = Image(64,64)
-local point = Point(0,0)
-newImage:drawImage(cel.image,point)
-cel.image = newImage
+-- local newImage = Image(64,64)
+-- local point = Point(0,0)
+-- newImage:drawImage(cel.image,point)
+-- cel.image = newImage
+-- print(cel.image.width..cel.image.height)
+-- cel.image:resize({size=Size(64,64),method="bilinear",pivot=Point(0,0)})
+-- print(cel.image.width..cel.image.height)
 print(cel.image.width..cel.image.height)
-cel.image:drawPixel(10,10,app.pixelColor.rgba(255,0,0,255))
 
 app.refresh()
+
+
+
 

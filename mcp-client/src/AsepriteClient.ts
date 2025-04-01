@@ -9,9 +9,10 @@ export class AsepriteClient {
   client: WebSocket | undefined;
 
   //已经完成的请求
-  completedRequests: Map<number, {succ:boolean,reason:string}> = new Map();
+  completedRequests: Map<number, { succ: boolean; reason: string }> = new Map();
 
   singleRequestWaitCount: number = 50;
+  connected: boolean = false;
 
   constructor() {}
 
@@ -23,21 +24,36 @@ export class AsepriteClient {
     this.client?.send(JSON.stringify(msg));
   }
 
-  async getCallBack(sessionId: number):Promise<{succ:boolean,reason:string}> {
+  async getCallBack(
+    sessionId: number
+  ): Promise<{ succ: boolean; reason: string }> {
     const waitTime = this.singleRequestWaitCount;
     while (waitTime > 0) {
-        if(this.completedRequests.has(sessionId)){
-            const result = this.completedRequests.get(sessionId);
-            if(!result)
-                break;
-            const succ = result.succ;
-            const reason = result.reason;
-            this.completedRequests.delete(sessionId);
-            return {succ,reason};
-        }
+      if (this.completedRequests.has(sessionId)) {
+        const result = this.completedRequests.get(sessionId);
+        if (!result) break;
+        const succ = result.succ;
+        const reason = result.reason;
+        this.completedRequests.delete(sessionId);
+        return { succ, reason };
+      }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    return {succ:false,reason:"未及时收到Aseprite回执结果"};
+    return { succ: false, reason: "未及时收到Aseprite回执结果" };
+  }
+
+  async checkConnection() {
+    if (this.client?.readyState === WebSocket.OPEN) {
+      return true;
+    }
+
+    this.connect();
+    var waitCount = 50;
+    while (this.connected == false && waitCount > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      waitCount--;
+    }
+    return false;
   }
 
   connect() {
@@ -46,20 +62,24 @@ export class AsepriteClient {
 
     // 连接成功后的回调
     this.client.addEventListener("open", () => {
-      console.log("连接已建立！");
+      this.connected = true;
     });
 
     // 接收到消息的回调
     this.client.addEventListener("message", (event: MessageEvent<string>) => {
       const message = event.data; // 使用 event.data 获取消息内容
-      console.log("收到消息:", message);
-      if(message != null && message.length > 0){
+
+      if (message != null && message.length > 0) {
+        //   console.log("收到消息:", message);
         const strs = message.split(";;");
-        if(strs.length == 3){
-            const sessionId = parseInt(strs[0]);
-            if(sessionId > 0){
-                this.completedRequests.set(sessionId, {succ:(strs[1] == "1"),reason:strs[2]});
-            }
+        if (strs.length >= 2) {
+          const sessionId = parseInt(strs[0]);
+          if (sessionId > 0) {
+            this.completedRequests.set(sessionId, {
+              succ: strs[1] == "1",
+              reason: strs.length > 2 ? strs[2] : "",
+            });
+          }
         }
       }
     });

@@ -9,7 +9,7 @@ async def server(websocket):
         client_id = 'A' if 'A' not in clients else 'B'
         clients[client_id] = websocket
         print(f"新客户端 {client_id} 连接")
-        # await websocket.send(f"Connected to server as Client {client_id}!")
+        # await websocket.send(f"connect server Success")
         
         try:
             async for message in websocket:

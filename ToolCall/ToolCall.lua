@@ -1,5 +1,4 @@
 local SystemTool = require("./ToolCall.SystemTool")
-local structDefine = require("./StructDefine/StructDefine")
 
 local returnInfo = {
     processSucc = true,
@@ -12,10 +11,15 @@ function HandleMessage(messageDistruct)
 
     print("解析为指令：" .. command .. "，参数：" .. bodyJsonStr)
 
-    local info = returnInfo.new()
+    local info = {
+        processSucc = true,
+        reason = ""
+    }
 
     if command == "create-sprite" then
         Call_CreateSprite(bodyJsonStr, info)
+    elseif command == "draw-pixel"  then
+        Call_DrawPixel(bodyJsonStr, info)
     else
         info.processSucc = false
         info.reason = "未知指令:" .. command .. " Aseprite 插件不支持该指令"
@@ -31,7 +35,7 @@ function Call_DrawPixel(jsonBody, info)
     info.processSucc = true
 
     local decodeObj = DecodeJsonToObj(jsonBody)
-    if (decodeObj == nil) or type(decodeObj) ~= "table" or #decodeObj <= 0 then
+    if (decodeObj == nil) or (#decodeObj <= 0) then
         info.processSucc = false
         info.reason = "参数解析反序列化失败"
         return
@@ -47,17 +51,17 @@ function Call_DrawPixel(jsonBody, info)
     local height = sprite.height
 
     for i, obj in ipairs(decodeObj) do
-        local drawType = obj.drawType
-        local targetLayer = obj.targetLayer
-        local targetFrame = obj.targetFrame
-        local createFrameMode = obj.createFrameMode
+        local drawType = tonumber(obj.drawType)
+        local targetLayer = tonumber(obj.targetLayer)
+        local targetFrame = tonumber(obj.targetFrame)
+        local createFrameMode = tonumber(obj.createFrameMode)
         local posStr = obj.posStr
-        local color_r = obj.color_r
-        local color_g = obj.color_g
-        local color_b = obj.color_b
-        local color_a = obj.color_a
+        local color_r = tonumber(obj.color_r)
+        local color_g = tonumber(obj.color_g)
+        local color_b = tonumber(obj.color_b)
+        local color_a = tonumber(obj.color_a)
 
-        SystemTool.CheckLayerAndFrame(sprite, targetLayer, targetFrame, createFrameMode)
+        CheckLayerAndFrame(sprite, targetLayer, targetFrame, createFrameMode)
 
         -- 创建一个数组来保存分割后的坐标
         local posArray = {}
@@ -117,7 +121,7 @@ function Call_DrawPixel(jsonBody, info)
             for _, pos in ipairs(posArray) do
                 local posX = pos.x
                 local posY = pos.y
-                SystemTool:drawPixel(image, posX, posY, targetColor)
+                DrawPixel(image, posX, posY, targetColor)
             end
         elseif drawType == 2 then
             -- 连线绘制
@@ -126,14 +130,14 @@ function Call_DrawPixel(jsonBody, info)
                 local posY1 = posArray[i].y
                 local posX2 = posArray[i + 1].x
                 local posY2 = posArray[i + 1].y
-                SystemTool.DrawLine(image, posX1, posY1, posX2, posY2, targetColor)
+                DrawLine(image, posX1, posY1, posX2, posY2, targetColor)
             end
         elseif drawType == 3 then
             -- 填充模式
             for _, pos in ipairs(posArray) do
                 local posX = pos.x
                 local posY = pos.y
-                SystemTool.FillAreaColor(image, posX, posY, targetColor)
+                FillAreaColor(image, posX, posY, targetColor)
             end
         else
             info.processSucc = false
@@ -150,7 +154,7 @@ function Call_CreateSprite(jsonBody, info)
     info.processSucc = true
 
     local decodeObj = DecodeJsonToObj(jsonBody)
-    if (decodeObj == nil) or type(decodeObj) ~= "table" then
+    if (decodeObj == nil) then
         info.processSucc = false
         info.reason = "参数解析反序列化失败"
         return

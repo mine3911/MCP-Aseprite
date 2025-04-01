@@ -9,6 +9,7 @@ export class AsepriteClient {
     //已经完成的请求
     completedRequests = new Map();
     singleRequestWaitCount = 50;
+    connected = false;
     constructor() { }
     sendMessage(sessionId, command, body) {
         let msg = new MessageStruct();
@@ -21,11 +22,27 @@ export class AsepriteClient {
         const waitTime = this.singleRequestWaitCount;
         while (waitTime > 0) {
             if (this.completedRequests.has(sessionId)) {
-                const succ = this.completedRequests.get(sessionId);
+                const result = this.completedRequests.get(sessionId);
+                if (!result)
+                    break;
+                const succ = result.succ;
+                const reason = result.reason;
                 this.completedRequests.delete(sessionId);
-                return succ;
+                return { succ, reason };
             }
             await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        return { succ: false, reason: "未及时收到Aseprite回执结果" };
+    }
+    async checkConnection() {
+        if (this.client?.readyState === WebSocket.OPEN) {
+            return true;
+        }
+        this.connect();
+        var waitCount = 50;
+        while (this.connected == false && waitCount > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            waitCount--;
         }
         return false;
     }
@@ -34,18 +51,21 @@ export class AsepriteClient {
         this.client = new WebSocket("ws://localhost:8848");
         // 连接成功后的回调
         this.client.addEventListener("open", () => {
-            console.log("连接已建立！");
+            this.connected = true;
         });
         // 接收到消息的回调
         this.client.addEventListener("message", (event) => {
             const message = event.data; // 使用 event.data 获取消息内容
-            console.log("收到消息:", message);
             if (message != null && message.length > 0) {
+                //   console.log("收到消息:", message);
                 const strs = message.split(";;");
-                if (strs.length == 2) {
+                if (strs.length >= 2) {
                     const sessionId = parseInt(strs[0]);
                     if (sessionId > 0) {
-                        this.completedRequests.set(sessionId, strs[1] == "1");
+                        this.completedRequests.set(sessionId, {
+                            succ: strs[1] == "1",
+                            reason: strs.length > 2 ? strs[2] : "",
+                        });
                     }
                 }
             }

@@ -14,7 +14,7 @@ local function handleMessage(mt, data)
       local messageDistruct = Create_MessageStruct(decodeObj)
       local result = HandleMessage(messageDistruct)
 
-      Ws:sendText(messageDistruct.sessionID .. ";;" .. result)
+      Ws:sendText(messageDistruct.sessionID .. ";;" .. ((result.processSucc and "1") or "0")..";;"..result.reason)
 
     elseif mt == WebSocketMessageType.CLOSE then
       print("Connection closed")

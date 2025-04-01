@@ -25,7 +25,6 @@ function CheckLayerAndFrame(sprite, targetLayer, targetFrame,createFrameMode)
 end
 
 function DrawPixel(image, x, y, color)
-    先获取相对image的本地坐标，若超出边界，new一个新的画布尺寸的image，将原始image复制到新image，然后再绘制
     image:drawPixel(x, y, color)
 end
 
@@ -38,7 +37,7 @@ function DrawLine(image, x1, y1, x2, y2, color)
     local err = dx + dy
 
     while true do
-        image:drawPixel(x1, y1, color)
+        DrawPixel(image,x1, y1, color)
         if x1 == x2 and y1 == y2 then
             break
         end
@@ -78,7 +77,7 @@ function FillAreaColor(image, x, y, color)
         end
 
         -- 绘制像素
-        image:drawPixel(x, y, color)
+        DrawPixel(image,x, y, color)
 
         -- 递归填充上下左右四个方向
         fill(x + 1, y)
