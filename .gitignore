@@ -1,3 +1,4 @@
 mcp-client/node_modules
 mcp-client/tsconfig.json
 .vscode
+demo.lua
