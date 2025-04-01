@@ -3,8 +3,14 @@
 > [!IMPORTANT]
 >
 > **This project is under development and will be updated from time to time.**
+>
+> **The currently realized functions: basic drawing functions**
 
 
+
+This project is a Model Context Protocol (MCP) server for Aseprite.
+
+Currently, LLM can draw in Aseprite through MCP.
 
 ## 1、File structure
 
